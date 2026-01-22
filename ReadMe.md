@@ -447,12 +447,7 @@ ksef-pdf-generator/
 ## 📧 Kontakt i wsparcie
 
 W razie pytań lub problemów, otwórz **Issue** na GitHubie:
-https://github.com/CIRFMF/ksef-pdf-generator/issues
+[https://github.com/CIRFMF/ksef-pdf-generator/issues](https://github.com/LeMobi-Software/ksef-pdf-generator/issues)
 
----
-
-## 📝 Licencja
-
-[Podaj licencję projektu]
 
 
