@@ -1,0 +1,35 @@
+{
+  "name": "@akmf/ksef-fe-invoice-converter",
+  "version": "0.0.42",
+  "scripts": {
+    "build:lib": "vite build --mode production",
+    "build:server": "tsc --project tsconfig.server.json",
+    "build": "npm run build:lib && npm run build:server",
+    "start": "node dist-server/server.js",
+    "dev": "node --watch dist-server/server.js",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:ci": "vitest run --coverage"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "buffer": "^6.0.3",
+    "express": "^4.21.0",
+    "formdata-node": "^6.0.3",
+    "node-fetch": "^3.3.2",
+    "pdfmake": "^0.2.20",
+    "xml-js": "^1.6.11"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.5",
+    "@types/express": "^4.17.21",
+    "@types/pdfmake": "^0.2.11",
+    "@vitest/coverage-v8": "^4.0.17",
+    "@vitest/ui": "^4.0.17",
+    "jsdom": "^27.4.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.6",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.0.17"
+  }
+}

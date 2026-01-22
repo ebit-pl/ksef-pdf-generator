@@ -1,0 +1,4 @@
+import { Content } from 'pdfmake/interfaces';
+import { Podmiot3Podmiot2KDto } from '../../types/fa1-additional-types';
+export declare function generateDaneIdentyfikacyjneTPodmiot3Dto(podmiot2KDto: Podmiot3Podmiot2KDto | undefined, index: number): Content[];
+//# sourceMappingURL=Podmiot3Podmiot2k.d.ts.map
