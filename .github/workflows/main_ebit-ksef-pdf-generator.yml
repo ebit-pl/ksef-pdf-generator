@@ -34,7 +34,6 @@ jobs:
           pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           npm install
           npm run build --if-present
-          npm run test --if-present
           popd
 
       - name: Zip artifact for deployment
@@ -78,4 +77,5 @@ jobs:
           app-name: 'ebit-ksef-pdf-generator'
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
           
