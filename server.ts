@@ -22,23 +22,57 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Invoice PDF generation
+// // Invoice PDF generation
+// app.post('/invoice', async (req: Request, res: Response) => {
+//   try {
+//     const xml = req.body as string;
+//     if (!xml || xml.trim().length === 0) {
+//       res.status(400).json({ error: 'Empty XML body' });
+//       return;
+//     }
+	
+// 	// Możesz przekazać nrKSeF przez header
+//     const additionalData = {
+//       nrKSeF: req.headers['x-ksef-number'] as string,
+//       qrCode: req.headers['x-ksef-qrcode'] as string
+//     };
+	
+//     console.log(`[${new Date().toISOString()}] Generating invoice PDF from XML (${xml.length} bytes)`);
+//     const pdfBuffer = await generateInvoicePdf(xml, additionalData);
+
+//     res.setHeader('Content-Type', 'application/pdf');
+//     res.setHeader('Content-Disposition', 'inline; filename="invoice.pdf"');
+//     res.setHeader('Content-Length', pdfBuffer.length);
+//     res.send(Buffer.from(pdfBuffer));
+
+//     console.log(`[${new Date().toISOString()}] Invoice PDF sent (${pdfBuffer.length} bytes)`);
+//   } catch (err) {
+//     console.error(`[${new Date().toISOString()}] Invoice PDF error:`, err);
+//     res.status(500).json({
+//       error: 'Invoice PDF generation failed',
+//       details: err instanceof Error ? err.message : String(err)
+//     });
+//   }
+// });
+
 app.post('/invoice', async (req: Request, res: Response) => {
   try {
-    const xml = req.body as string;
-    if (!xml || xml.trim().length === 0) {
-      res.status(400).json({ error: 'Empty XML body' });
+    const { ksefNumber, qrCodeLink, xmlString } = JSON.parse(req.body)
+
+    if (!ksefNumber || ksefNumber.trim().length === 0) {
+      res.status(400).json({ error: 'Empty ksefNumber' });
+      return;
+    }
+    if (!xmlString || xmlString.trim().length === 0) {
+      res.status(400).json({ error: 'Empty xmlString' });
       return;
     }
 	
-	// Możesz przekazać nrKSeF przez header
-    const additionalData = {
-      nrKSeF: req.headers['x-ksef-number'] as string,
-      qrCode: req.headers['x-ksef-qrcode'] as string
-    };
-	
-    console.log(`[${new Date().toISOString()}] Generating invoice PDF from XML (${xml.length} bytes)`);
-    const pdfBuffer = await generateInvoicePdf(xml, additionalData);
+    console.log(`[${new Date().toISOString()}] Generating invoice PDF from XML (${xmlString.length} bytes)`);
+    const pdfBuffer = await generateInvoicePdf(xmlString, {
+      nrKSeF: ksefNumber,
+      qrCode: qrCodeLink
+    });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'inline; filename="invoice.pdf"');
