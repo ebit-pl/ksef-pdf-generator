@@ -1,17 +1,39 @@
+import path from 'path';
+// process.env.XML_CATALOG_FILES = path.resolve(__dirname, './schemas/catalog.xml');
+// process.env.LIBXML_DEBUG_ENABLED = "true";
+
 import express from 'express';
 import bodyParser from 'body-parser';
-import path from 'path';
 import { fileURLToPath } from 'url';
 import type { Request, Response } from 'express';
 import { generateInvoicePdf, generateUpoPdf, closeBrowser } from './src/server/pdfService.js';
 import crypto from 'crypto'
 import xpath from 'xpath'
 import { DOMParser } from 'xmldom'
+import fs from 'fs'
+import libxml from 'libxmljs2'
+
+function validateXML(xmlString: string) {
+  const schemaPath = './schemas/main.xsd'
+  const schemaDir = path.resolve('./schemas') + path.sep
+
+  const xsdDoc = libxml.parseXml(fs.readFileSync(schemaPath).toString('utf-8'), {
+    baseUrl: schemaDir
+  })
+  const xmlDoc = libxml.parseXml(xmlString)
+
+  const isValid = xmlDoc.validate(xsdDoc)
+
+  return {
+    isValid: isValid,
+    errors: xmlDoc.validationErrors,
+  }
+}
 
 function generateFileHash(invoiceXML: string) {
   return crypto.createHash('sha256')
-      .update(invoiceXML, 'utf8')
-      .digest('base64url')
+    .update(invoiceXML, 'utf8')
+    .digest('base64url')
 }
 
 function buildQrLink(xmlString: string) {
@@ -56,13 +78,13 @@ app.get('/health', (_req: Request, res: Response) => {
 //       res.status(400).json({ error: 'Empty XML body' });
 //       return;
 //     }
-	
+
 // 	// Możesz przekazać nrKSeF przez header
 //     const additionalData = {
 //       nrKSeF: req.headers['x-ksef-number'] as string,
 //       qrCode: req.headers['x-ksef-qrcode'] as string
 //     };
-	
+
 //     console.log(`[${new Date().toISOString()}] Generating invoice PDF from XML (${xml.length} bytes)`);
 //     const pdfBuffer = await generateInvoicePdf(xml, additionalData);
 
@@ -81,6 +103,29 @@ app.get('/health', (_req: Request, res: Response) => {
 //   }
 // });
 
+app.post('/validate', async (req: Request, res: Response) => {
+  try {
+    const { xmlString } = JSON.parse(req.body)
+
+    if (!xmlString || xmlString.trim().length === 0) {
+      res.status(400).json({ error: 'Empty xmlString' })
+      return
+    }
+
+    const result = validateXML(xmlString)
+
+    res.setHeader('Content-Type', 'application/json')
+    res.send(result)
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Invoice validation error:`, err);
+    res.status(500).json({
+      error: 'Invoice validation failed',
+      details: err instanceof Error ? err.message : String(err)
+    });
+  }
+})
+
+
 app.post('/invoice', async (req: Request, res: Response) => {
   try {
     const { ksefNumber, xmlString } = JSON.parse(req.body)
@@ -93,7 +138,7 @@ app.post('/invoice', async (req: Request, res: Response) => {
       res.status(400).json({ error: 'Empty xmlString' });
       return;
     }
-	
+
     console.log(`[${new Date().toISOString()}] Generating invoice PDF from XML (${xmlString.length} bytes)`);
     const pdfBuffer = await generateInvoicePdf(xmlString, {
       nrKSeF: ksefNumber,

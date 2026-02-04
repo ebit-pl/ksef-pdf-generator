@@ -17,6 +17,7 @@
     "buffer": "^6.0.3",
     "express": "^4.21.0",
     "formdata-node": "^6.0.3",
+    "libxmljs2": "^0.37.0",
     "node-fetch": "^3.3.2",
     "pdfmake": "^0.2.20",
     "xml-js": "^1.6.11",
