@@ -4,6 +4,32 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import type { Request, Response } from 'express';
 import { generateInvoicePdf, generateUpoPdf, closeBrowser } from './src/server/pdfService.js';
+import crypto from 'crypto'
+import xpath from 'xpath'
+import { DOMParser } from 'xmldom'
+
+function generateFileHash(invoiceXML: string) {
+  return crypto.createHash('sha256')
+      .update(invoiceXML, 'utf8')
+      .digest('base64url')
+}
+
+function buildQrLink(xmlString: string) {
+  const doc = new DOMParser().parseFromString(xmlString, "text/xml")
+
+  const nipNode = xpath.select("//*[local-name()='NIP']", doc, true)
+  const dateNode = xpath.select("//*[local-name()='P_1']", doc, true)
+
+  //@ts-ignore
+  const nipValue = nipNode.firstChild.data
+  //@ts-ignore
+  const dateParts = dateNode.firstChild.data.split('-')
+  const dateValue = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`
+
+  const hash = generateFileHash(xmlString)
+
+  return `https://qr.ksef.mf.gov.pl/invoice/${nipValue}/${dateValue}/${hash}`
+}
 
 const app = express();
 
@@ -57,7 +83,7 @@ app.get('/health', (_req: Request, res: Response) => {
 
 app.post('/invoice', async (req: Request, res: Response) => {
   try {
-    const { ksefNumber, qrCodeLink, xmlString } = JSON.parse(req.body)
+    const { ksefNumber, xmlString } = JSON.parse(req.body)
 
     if (!ksefNumber || ksefNumber.trim().length === 0) {
       res.status(400).json({ error: 'Empty ksefNumber' });
@@ -71,7 +97,7 @@ app.post('/invoice', async (req: Request, res: Response) => {
     console.log(`[${new Date().toISOString()}] Generating invoice PDF from XML (${xmlString.length} bytes)`);
     const pdfBuffer = await generateInvoicePdf(xmlString, {
       nrKSeF: ksefNumber,
-      qrCode: qrCodeLink
+      qrCode: buildQrLink(xmlString)
     });
 
     res.setHeader('Content-Type', 'application/pdf');
